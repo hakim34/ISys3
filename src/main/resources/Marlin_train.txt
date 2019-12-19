@@ -1,5 +1,4 @@
-*** Marlin train
-approach leave 
+approach leave
 approach bill_use open_mouth leave 
 approach leave 
 approach open_mouth leave 
