@@ -1,0 +1,1 @@
+cmax = argmax (c element of C) [P(b | c) P(c)] , wobei C = {Marlin, Sailfish}
