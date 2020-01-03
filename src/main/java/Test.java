@@ -1,4 +1,6 @@
 import java.io.*;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -9,21 +11,36 @@ public class Test {
     public static void main(String[] args) throws IOException {
         String sailfishTrain = "src/main/resources/Sailfish_train.txt";
         String marlinTrain = "src/main/resources/Marlin_train.txt";
+        String sailfishTest = "src/main/resources/Sailfish_eval.txt";
+        String marlinTest = "src/main/resources/Marlin_eval.txt";
+
+        double[][] sailFishProbability = markovMatrix(nextMoveFrequencies(sailfishTrain));
+        double[][] marlinProbability = markovMatrix(nextMoveFrequencies(marlinTrain));
+        System.out.println(Arrays.deepToString(sailFishProbability).replace("],", " \n"));
+        System.out.println(Arrays.deepToString(marlinProbability).replace("],", "], \n"));
+
+        Evaluator evaluator = new Evaluator(sailFishProbability, marlinProbability);
+        System.out.println(evaluator.evaluate(readText(sailfishTest)));
+        System.out.println(evaluator.evaluate(readText(marlinTest)));
+        //marlin recognizer is worse due to every sequence of "approach leave" being considered as sailfish
+    }
+
+    /**
+     * Create map of frequency of next movements of each movement
+     * @param text the text containing sequences separated by a new line
+     * @return the map
+     * @throws IOException incase the file doesn't exist
+     */
+    public static Map<String, Map<String, Integer>> nextMoveFrequencies(String text) throws IOException {
         //LinkedHashMap is used to maintain the insertion order
         Map<String, Map<String, Integer>> nextMoveFrequencies = new LinkedHashMap<>();
-
         for(String move : moves) {
-            System.out.println(move);
-            Map<String, Integer> freq = nextMoveFrequencyOf(readText(marlinTrain), move);
-            System.out.println(freq);
+            //System.out.println(move);
+            Map<String, Integer> freq = nextMoveFrequencyOf(readText(text), move);
+            //System.out.println(freq);
             nextMoveFrequencies.put(move, freq);
         }
-
-        double[][] probability = markovMatrix(nextMoveFrequencies);
-        System.out.println(Arrays.deepToString(probability).replace("],", " \n"));
-
-        String[] sequenceTest = {"approach", "bill_use", "prey_contact", "open_mouth", "leave"};
-        System.out.println(sequenceProbability(sequenceTest, probability));
+        return nextMoveFrequencies;
     }
 
     /**
@@ -95,27 +112,6 @@ public class Test {
                 i2++;
             }
             i++;
-        }
-        return probability;
-    }
-
-    /**
-     * Calculates the probability of a particular movement sequence using a given probability matrix
-     * @param sequence the sequence in question
-     * @param probabilityMatrix the matrix according to the first degree of markov chain
-     * @return the probability
-     */
-    public static double sequenceProbability(String[] sequence, double[][] probabilityMatrix) {
-        double probability = 1.0;
-        String prev = null;
-        for(String movement : sequence) {
-            if(prev != null) {
-                String finalPrev = prev;
-                int index = IntStream.range(0, moves.length).filter(i -> moves[i].equals(finalPrev)).findFirst().orElse(-1);
-                int index2 = IntStream.range(0, nextMoves.length).filter(i -> nextMoves[i].equals(movement)).findFirst().orElse(-1);
-                probability *= probabilityMatrix[index][index2];
-            }
-            prev = movement;
         }
         return probability;
     }
