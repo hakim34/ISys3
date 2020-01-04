@@ -1,8 +1,3 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +15,11 @@ public class Evaluator {
         this.marlinMatrix = matrix2;
     }
 
+    /**
+     * maps the number of sequences to each type of fish, that got recognized
+     * @param sequences sequences that are to be analyzed
+     * @return the map of the categorization
+     */
     public Map<String, Integer> evaluate(List<String[]> sequences) {
         Map<String, Integer> map = new HashMap<>();
         map.put("Sailfish", 0);

@@ -1,11 +1,10 @@
 import java.io.*;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
-import java.util.stream.IntStream;
 
 public class Test {
+    //because "leave" has no possible next movement, it's excluded from 'moves'"
     public static String[] moves = {"approach", "bill_use", "prey_contact", "open_mouth", "ingest"};
+    //analogously "approach" has no previous movement, this helps reducing redundancy in the matrix
     public static String[] nextMoves = {"bill_use", "prey_contact", "open_mouth", "ingest", "leave"};
 
     public static void main(String[] args) throws IOException {
@@ -16,31 +15,20 @@ public class Test {
 
         double[][] sailFishProbability = markovMatrix(nextMoveFrequencies(sailfishTrain));
         double[][] marlinProbability = markovMatrix(nextMoveFrequencies(marlinTrain));
-        System.out.println(Arrays.deepToString(sailFishProbability).replace("],", " \n"));
-        System.out.println(Arrays.deepToString(marlinProbability).replace("],", "], \n"));
+        printMatrix(sailFishProbability);
+        printMatrix(marlinProbability);
 
         Evaluator evaluator = new Evaluator(sailFishProbability, marlinProbability);
-        System.out.println(evaluator.evaluate(readText(sailfishTest)));
-        System.out.println(evaluator.evaluate(readText(marlinTest)));
+        Map<String, Integer> sail = evaluator.evaluate(readText(sailfishTest));
+        Map<String, Integer> marlin = evaluator.evaluate(readText(marlinTest));
+        System.out.println(sail);
+        System.out.println(marlin);
         //marlin recognizer is worse due to every sequence of "approach leave" being considered as sailfish
-    }
 
-    /**
-     * Create map of frequency of next movements of each movement
-     * @param text the text containing sequences separated by a new line
-     * @return the map
-     * @throws IOException incase the file doesn't exist
-     */
-    public static Map<String, Map<String, Integer>> nextMoveFrequencies(String text) throws IOException {
-        //LinkedHashMap is used to maintain the insertion order
-        Map<String, Map<String, Integer>> nextMoveFrequencies = new LinkedHashMap<>();
-        for(String move : moves) {
-            //System.out.println(move);
-            Map<String, Integer> freq = nextMoveFrequencyOf(readText(text), move);
-            //System.out.println(freq);
-            nextMoveFrequencies.put(move, freq);
-        }
-        return nextMoveFrequencies;
+        double sailfishRecognizerPrecision = (double) sail.get("Sailfish")/(sail.get("Sailfish") + sail.get("Marlin"));
+        double marlinRecognizerPrecision = (double) marlin.get("Marlin")/(marlin.get("Sailfish") + marlin.get("Marlin"));
+        System.out.println("Sailfish recognizer precision   : " + sailfishRecognizerPrecision);
+        System.out.println("Marlin recognizer precision     : " + marlinRecognizerPrecision);
     }
 
     /**
@@ -65,7 +53,25 @@ public class Test {
     }
 
     /**
-     * Calculates the frequency of each next movements of a given movement from a list of movement sequences
+     * Create map of frequency of different next movements of each movement
+     * @param text the text containing sequences separated by a new line
+     * @return the map
+     * @throws IOException incase the file doesn't exist
+     */
+    public static Map<String, Map<String, Integer>> nextMoveFrequencies(String text) throws IOException {
+        //LinkedHashMap is used to maintain the insertion order
+        Map<String, Map<String, Integer>> nextMoveFrequencies = new LinkedHashMap<>();
+        for(String move : moves) {
+            //System.out.println(move);
+            Map<String, Integer> freq = nextMoveFrequencyOf(readText(text), move);
+            //System.out.println(freq);
+            nextMoveFrequencies.put(move, freq);
+        }
+        return nextMoveFrequencies;
+    }
+
+    /**
+     * Calculates the frequency of each next movements of a given movement from a list of movement [sequences]
      * @param sequences the sequences from which the frequency will be determined
      * @param nextMoveFrequencies the movement in question
      * @return return the map of frequency of each next movement
@@ -114,6 +120,27 @@ public class Test {
             i++;
         }
         return probability;
+    }
+
+    /**
+     * Prints out specific 2 dimensional array, including the labels of its rows and columns
+     * to improve the readability. Some significant digits won't be displayed, though there will
+     * be no side effects on the values itself
+     * @param matrix the matrix to be printed out
+     */
+    public static void printMatrix(double[][] matrix) {
+        System.out.print(String.format("|%-12s|", ""));
+        for(String nextMove : nextMoves) {
+            System.out.print(String.format("%-12s|", nextMove));
+        }
+        System.out.println();
+        for(int i = 0; i < matrix.length; i++) {
+            System.out.print(String.format("|%-12s|", moves[i]));
+            for(int i2 = 0; i2 < matrix[i].length; i2++) {
+                System.out.print(String.format("%.9f, ", matrix[i][i2]));
+            }
+            System.out.println();
+        }
     }
 }
 
