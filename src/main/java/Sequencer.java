@@ -72,9 +72,7 @@ public class Sequencer {
         //LinkedHashMap is used to maintain the insertion order
         Map<String, Map<String, Integer>> nextMoveFrequencies = new LinkedHashMap<>();
         for(String move : moves) {
-            //System.out.println(move);
             Map<String, Integer> freq = nextMoveFrequencyOf(readText(filepath), move);
-            //System.out.println(freq);
             nextMoveFrequencies.put(move, freq);
         }
         return nextMoveFrequencies;
@@ -87,7 +85,7 @@ public class Sequencer {
      * @return                      The map of frequency of each next movement
      */
     public static Map<String, Integer> nextMoveFrequencyOf(List<String[]> sequences, String nextMoveFrequencies) {
-        //this won't be in order at first
+        // This won't be in order at first
         Map<String, Integer> freq = new HashMap<>();
         for(String[] sequence : sequences) {
             String curr = null;
@@ -112,13 +110,13 @@ public class Sequencer {
      */
     public static double[][] markovMatrix(Map<String, Map<String, Integer>> matrix) {
         double[][] probability = new double[5][5];
-        int i = 0; //row number
+        int i = 0; // row number
         for(String key : matrix.keySet()) {
-            int total = 0; //combined counts of occurrences for probability calculation
+            int total = 0; // combined counts of occurrences for probability calculation
             for(String key2 : matrix.get(key).keySet()) {
                 total += matrix.get(key).get(key2);
             }
-            int j = 0; //column number
+            int j = 0; // column number
             for(String move : nextMoves) {
                 if(matrix.get(key).containsKey(move)) {
                     probability[i][j] = (double) matrix.get(key).get(move)/total;
