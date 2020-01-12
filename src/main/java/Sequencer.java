@@ -37,8 +37,9 @@ public class Sequencer {
 
         double sailfishRecognizerPrecision = (double) sail.get("Sailfish")/(sail.get("Sailfish") + sail.get("Marlin"));
         double marlinRecognizerPrecision = (double) marlin.get("Marlin")/(marlin.get("Sailfish") + marlin.get("Marlin"));
-        System.out.println("Sailfish recognizer precision   : " + sailfishRecognizerPrecision);
-        System.out.println("Marlin recognizer precision     : " + marlinRecognizerPrecision);
+        System.out.println("Sailfish recognizer precision   : " + sailfishRecognizerPrecision * 100 + "%");
+        System.out.println("Marlin recognizer precision     : " + marlinRecognizerPrecision * 100 + "%");
+        System.out.println("Combined recognizer precision   : " +  (sailfishRecognizerPrecision + marlinRecognizerPrecision)/2 * 100 + "%" );
     }
 
     /**
