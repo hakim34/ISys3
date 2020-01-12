@@ -1,13 +1,25 @@
 import java.io.*;
 import java.util.*;
 
-public class Test {
-    //because "leave" has no possible next movement, it's excluded from 'moves'"
-    public static String[] moves = {"approach", "bill_use", "prey_contact", "open_mouth", "ingest"};
-    //analogously "approach" has no previous movement, this helps reducing redundancy in the matrix
-    public static String[] nextMoves = {"bill_use", "prey_contact", "open_mouth", "ingest", "leave"};
+/**
+ * This class uses the training data of the behaviour sequences of sailfishes and marlins to evaluate
+ * if the given sequence belongs to the one or the other.
+ * Afterwards the recognition precision is calculated with the evaluation data.
+ */
+public class Sequencer {
+    /** Because "leave" has no possible next movement, it's excluded from 'moves'" */
+    private static String[] moves = {"approach", "bill_use", "prey_contact", "open_mouth", "ingest"};
 
+    /** "approach" is excluded, because it has no possible previous movement */
+    private static String[] nextMoves = {"bill_use", "prey_contact", "open_mouth", "ingest", "leave"};
+
+    /**
+     * This program reads all training and evaluation data, evaluates the predicted results
+     * and prints the precision to the console
+     * @throws IOException When the expected files containing the training and evaluation data are not present
+     */
     public static void main(String[] args) throws IOException {
+        // Declare resource file paths
         String sailfishTrain = "src/main/resources/Sailfish_train.txt";
         String marlinTrain = "src/main/resources/Marlin_train.txt";
         String sailfishTest = "src/main/resources/Sailfish_eval.txt";
@@ -15,15 +27,13 @@ public class Test {
 
         double[][] sailFishProbability = markovMatrix(nextMoveFrequencies(sailfishTrain));
         double[][] marlinProbability = markovMatrix(nextMoveFrequencies(marlinTrain));
-        printMatrix(sailFishProbability);
-        printMatrix(marlinProbability);
 
         Evaluator evaluator = new Evaluator(sailFishProbability, marlinProbability);
         Map<String, Integer> sail = evaluator.evaluate(readText(sailfishTest));
         Map<String, Integer> marlin = evaluator.evaluate(readText(marlinTest));
         System.out.println(sail);
         System.out.println(marlin);
-        //marlin recognizer is worse due to every sequence of "approach leave" being considered as sailfish
+        // Marlin recognizer is worse due to every sequence of "approach leave" being considered as sailfish
 
         double sailfishRecognizerPrecision = (double) sail.get("Sailfish")/(sail.get("Sailfish") + sail.get("Marlin"));
         double marlinRecognizerPrecision = (double) marlin.get("Marlin")/(marlin.get("Sailfish") + marlin.get("Marlin"));
@@ -34,12 +44,12 @@ public class Test {
     /**
      * Reads the given text and treats each line of the text as one complete sequence and then puts the sequences
      * in a single list and returns it.
-     * @param text the text in question
-     * @return the list of sequences
-     * @throws IOException in case the file can't be found
+     * @param filepath      The path to the file containing the sequences
+     * @return              The list of sequences
+     * @throws IOException  When the file can't be found
      */
-    public static List<String[]> readText(String text) throws IOException {
-        File file = new File(text);
+    public static List<String[]> readText(String filepath) throws IOException {
+        File file = new File(filepath);
         BufferedReader br = new BufferedReader(new FileReader(file));
 
         List<String[]> sequences = new ArrayList<>();
@@ -54,16 +64,16 @@ public class Test {
 
     /**
      * Create map of frequency of different next movements of each movement
-     * @param text the text containing sequences separated by a new line
-     * @return the map
-     * @throws IOException incase the file doesn't exist
+     * @param filepath      The path to the file containing sequences separated by a new line
+     * @return              The map
+     * @throws IOException  When the file doesn't exist
      */
-    public static Map<String, Map<String, Integer>> nextMoveFrequencies(String text) throws IOException {
+    public static Map<String, Map<String, Integer>> nextMoveFrequencies(String filepath) throws IOException {
         //LinkedHashMap is used to maintain the insertion order
         Map<String, Map<String, Integer>> nextMoveFrequencies = new LinkedHashMap<>();
         for(String move : moves) {
             //System.out.println(move);
-            Map<String, Integer> freq = nextMoveFrequencyOf(readText(text), move);
+            Map<String, Integer> freq = nextMoveFrequencyOf(readText(filepath), move);
             //System.out.println(freq);
             nextMoveFrequencies.put(move, freq);
         }
@@ -72,9 +82,9 @@ public class Test {
 
     /**
      * Calculates the frequency of each next movements of a given movement from a list of movement [sequences]
-     * @param sequences the sequences from which the frequency will be determined
-     * @param nextMoveFrequencies the movement in question
-     * @return return the map of frequency of each next movement
+     * @param sequences             The sequences from which the frequency will be determined
+     * @param nextMoveFrequencies   The movement in question
+     * @return                      The map of frequency of each next movement
      */
     public static Map<String, Integer> nextMoveFrequencyOf(List<String[]> sequences, String nextMoveFrequencies) {
         //this won't be in order at first
@@ -97,8 +107,8 @@ public class Test {
 
     /**
      * Construct probability matrix of a movement being followed by a particular move
-     * @param matrix map of the grouped next move frequencies
-     * @return two dimensional array of the probability
+     * @param matrix Map of the grouped next move frequencies
+     * @return       Two dimensional array of the probability
      */
     public static double[][] markovMatrix(Map<String, Map<String, Integer>> matrix) {
         double[][] probability = new double[5][5];
@@ -108,14 +118,14 @@ public class Test {
             for(String key2 : matrix.get(key).keySet()) {
                 total += matrix.get(key).get(key2);
             }
-            int i2 = 0; //column number
+            int j = 0; //column number
             for(String move : nextMoves) {
                 if(matrix.get(key).containsKey(move)) {
-                    probability[i][i2] = (double) matrix.get(key).get(move)/total;
+                    probability[i][j] = (double) matrix.get(key).get(move)/total;
                 } else {
-                    probability[i][i2] = 0.0;
+                    probability[i][j] = 0.0;
                 }
-                i2++;
+                j++;
             }
             i++;
         }
@@ -126,7 +136,7 @@ public class Test {
      * Prints out specific 2 dimensional array, including the labels of its rows and columns
      * to improve the readability. Some significant digits won't be displayed, though there will
      * be no side effects on the values itself
-     * @param matrix the matrix to be printed out
+     * @param matrix The matrix to be printed out
      */
     public static void printMatrix(double[][] matrix) {
         System.out.print(String.format("|%-12s|", ""));
